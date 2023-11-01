@@ -1,9 +1,8 @@
 services:
-  # auth:
-  #   image: ghcr.io/navikt/mock-oauth2-server:2.0.0
-  #   ports:
-  #     - 9999:8080
-  # Postgres database
+  auth:
+    image: ghcr.io/navikt/mock-oauth2-server:2.0.0
+    ports:
+      - 9999:8080
   db:
     image: postgres:15.2-bullseye
     restart: always
