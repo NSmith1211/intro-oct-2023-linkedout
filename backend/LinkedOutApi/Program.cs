@@ -1,4 +1,5 @@
 using LinkedOutApi;
+using LinkedOutApi.ReadModels;
 using Marten;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -69,6 +70,26 @@ app.MapPost("/user/counter", async (CounterRequest request,
     return Results.Ok(doc);
 }).RequireAuthorization();
 
+app.MapPost("/user/links", async (
+    UserLinkCreate request,
+    UserService service,
+    IDocumentSession session,
+    CancellationToken token) =>
+{
+    var userId = await service.GetUserIdAsync(token);
+
+    session.Events.Append(userId, request);
+    await session.SaveChangesAsync(token);
+    return Results.Ok(request);
+}).RequireAuthorization();
+
+app.MapGet("/user/links", async (UserService service, IDocumentSession session, CancellationToken token) =>
+{
+    var userId = await service.GetUserIdAsync(token);
+    var response = await session.Events.AggregateStreamAsync<UserLinks>(userId);
+    return Results.Ok(response);
+}).RequireAuthorization();
+
 app.MapGet("/user/counter", async (IDocumentSession session, UserService user, CancellationToken token) =>
 {
 
@@ -89,3 +110,4 @@ app.Run();
 
 public record CounterRequest(int Current, int By);
 public record UserCounter(Guid Id, int Current, int By);
+public record UserLinkCreate(Guid Id, string Href, string Description);
